@@ -1,0 +1,111 @@
+In topology b, we can estimate the latency for links between switches (e1 to a1, a1 to c1) if we assume that links at the same level have almost equal latency.
+However, we cannot estimate the throughput for links between switches (e1 to a1, a1 to c1) because the throughput of links between switches and hosts (level 3) is much slower and become a bottleneck.
+To estimate the throughput, we need to set the throughput of some links to be very large, so that we won't be affected by the bottleneck.
+
+Estimation results and processes:
+
+First, to eliminate the impact of links between switch and host (level 3) to the estimation,
+I test the throughput and delay between h1 and h2:
+h1 to h2 RTT: 41.650ms
+h1 to h2 throughput: 10.09 Mbits/sec
+
+1. e1 to a1 (also for e2 to a1, e3 to a2, e4 to a2)
+    estimated latency: 20.8505ms
+    estimated throughput: 40.8 Mbits/sec
+
+    To estimate the latency of e1 to a1, I ping h1 and h3 for a few seconds to let them establish arp table,
+    and then run `ping` with 20 packets.
+    By `h1 ping -c20 h3`, I get the following output:
+
+    PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.
+    64 bytes from 10.0.0.3: icmp_seq=1 ttl=64 time=124 ms
+    64 bytes from 10.0.0.3: icmp_seq=2 ttl=64 time=133 ms
+    64 bytes from 10.0.0.3: icmp_seq=3 ttl=64 time=126 ms
+    64 bytes from 10.0.0.3: icmp_seq=4 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=5 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=6 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=7 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=8 ttl=64 time=133 ms
+    64 bytes from 10.0.0.3: icmp_seq=9 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=10 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=11 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=12 ttl=64 time=135 ms
+    64 bytes from 10.0.0.3: icmp_seq=13 ttl=64 time=122 ms
+    64 bytes from 10.0.0.3: icmp_seq=14 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=15 ttl=64 time=122 ms
+    64 bytes from 10.0.0.3: icmp_seq=16 ttl=64 time=122 ms
+    64 bytes from 10.0.0.3: icmp_seq=17 ttl=64 time=123 ms
+    64 bytes from 10.0.0.3: icmp_seq=18 ttl=64 time=122 ms
+    64 bytes from 10.0.0.3: icmp_seq=19 ttl=64 time=122 ms
+    64 bytes from 10.0.0.3: icmp_seq=20 ttl=64 time=123 ms
+
+    --- 10.0.0.3 ping statistics ---
+    20 packets transmitted, 20 received, 0% packet loss, time 19029ms
+    rtt min/avg/max/mdev = 122.739/125.052/135.263/3.861 ms
+
+    Since the RTT also includes the RTT for packets to be transmitted from switch to host,
+    (125.052 - 41.650) / 4 = 20.8505ms is the estimated latency, quarter of the average round trip time between e1 and e2.
+
+    To estimate the throughput of e1 to a1, I manually increase the throughput of links at level 3 to 20 Gbits/sec.
+    Otherwise, we cannot estimate the real throughput of e1 to a1 because of the bottleneck.
+    Then I run 'iperf h1 h3' and get the following result:
+
+    *** Iperf: testing TCP bandwidth between h1 and h3 
+    *** Results: ['36.3 Mbits/sec', '40.8 Mbits/sec']
+
+    Since 40.8 Mbits/sec is much slower than 20 Gbits/sec, we can see that e1 to a1 is the bottleneck of the throughput.
+    Hen we can estimate that the throughput of e1 to a1 is about 40.8 Mbits/sec
+
+    For e2 to a1, e3 to a2, and e4 to a2, I used the similar method for estimation and the result is approximate to the result of e1 to a1.
+
+2. a1 to c1 (also for c1 to a2)
+    estimated latency: 30.4893ms
+    estimated throughput: 98.5 Mbits/sec
+
+    To estimate the latency of a1 to c1, I ping h1 and h5 for a few seconds to let them establish arp table,
+    and then run `ping` with 20 packets.
+    By `h1 ping -c20 h5`, I get the following output:
+ 
+    PING 10.0.0.5 (10.0.0.5) 56(84) bytes of data.
+    64 bytes from 10.0.0.5: icmp_seq=1 ttl=64 time=268 ms
+    64 bytes from 10.0.0.5: icmp_seq=2 ttl=64 time=268 ms
+    64 bytes from 10.0.0.5: icmp_seq=3 ttl=64 time=243 ms
+    64 bytes from 10.0.0.5: icmp_seq=4 ttl=64 time=247 ms
+    64 bytes from 10.0.0.5: icmp_seq=5 ttl=64 time=244 ms
+    64 bytes from 10.0.0.5: icmp_seq=6 ttl=64 time=245 ms
+    64 bytes from 10.0.0.5: icmp_seq=7 ttl=64 time=244 ms
+    64 bytes from 10.0.0.5: icmp_seq=8 ttl=64 time=246 ms
+    64 bytes from 10.0.0.5: icmp_seq=9 ttl=64 time=243 ms
+    64 bytes from 10.0.0.5: icmp_seq=10 ttl=64 time=243 ms
+    64 bytes from 10.0.0.5: icmp_seq=11 ttl=64 time=243 ms
+    64 bytes from 10.0.0.5: icmp_seq=12 ttl=64 time=244 ms
+    64 bytes from 10.0.0.5: icmp_seq=13 ttl=64 time=244 ms
+    64 bytes from 10.0.0.5: icmp_seq=14 ttl=64 time=243 ms
+    64 bytes from 10.0.0.5: icmp_seq=15 ttl=64 time=243 ms
+    64 bytes from 10.0.0.5: icmp_seq=16 ttl=64 time=246 ms
+    64 bytes from 10.0.0.5: icmp_seq=17 ttl=64 time=243 ms
+    64 bytes from 10.0.0.5: icmp_seq=18 ttl=64 time=246 ms
+    64 bytes from 10.0.0.5: icmp_seq=19 ttl=64 time=246 ms
+    64 bytes from 10.0.0.5: icmp_seq=20 ttl=64 time=242 ms
+
+    --- 10.0.0.5 ping statistics ---
+    20 packets transmitted, 20 received, 0% packet loss, time 19022ms
+    rtt min/avg/max/mdev = 242.950/247.009/268.948/7.360 ms
+ 
+    Since the RTT also includes the RTT for packets to be transmitted between the second level,
+    (247.009 - 125.052) / 4 = 30.4893ms is the estimated latency, quarter of the average round trip time between a1 and a2.
+
+    To estimate the throughput of a1 to c1, I manually increase the throughput of links at level 3 and level 2 to 20 Gbits/sec.
+    Otherwise, we cannot estimate the real throughput of a1 to c1 because of the bottleneck.
+    Then I run 'iperf h1 h5' and get the following result:
+  
+    *** Iperf: testing TCP bandwidth between h1 and h5 
+    *** Results: ['85.9 Mbits/sec', '98.5 Mbits/sec']
+  
+    Since 98.5 Mbits/sec is much slower than 20 Gbits/sec, we can see that a1 to c1 is the bottleneck of the throughput.
+    Hen we can estimate that the throughput of a1 to c1 is about 98.5 Mbits/sec
+
+    For c1 to a2, I used the similar method for estimation and the result is approximate to the result of e1 to a1.
+
+
+

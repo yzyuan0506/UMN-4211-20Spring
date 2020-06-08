@@ -1,0 +1,195 @@
+Yes, it is possible to estimate the throughput and latency between the switches for the
+links L1, L2, L3, and L4.
+
+Estimation results and processes:
+
+First, to eliminate the impact of links between switch and host to the estimation,
+I test the throughput and delay between h1 and h2:
+h1 to h2 RTT: 0.030ms
+h1 to h2 throughput: 18.7 Gbits/sec
+
+1. L1
+    estimated latency: 40.494ms
+    estimated throughput: 19.7 Mbits/sec
+
+    To estimate the latency of L1, I ping h1 and h2 for a few seconds to let them establish arp table,
+    and then run `ping` with 20 packets.
+    By `h1 ping -c20 h3`, I get the following output:
+    
+    PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.
+    64 bytes from 10.0.0.3: icmp_seq=1 ttl=64 time=80.7 ms
+    64 bytes from 10.0.0.3: icmp_seq=2 ttl=64 time=83.8 ms
+    64 bytes from 10.0.0.3: icmp_seq=3 ttl=64 time=80.3 ms
+    64 bytes from 10.0.0.3: icmp_seq=4 ttl=64 time=80.4 ms
+    64 bytes from 10.0.0.3: icmp_seq=5 ttl=64 time=80.4 ms
+    64 bytes from 10.0.0.3: icmp_seq=6 ttl=64 time=80.5 ms
+    64 bytes from 10.0.0.3: icmp_seq=7 ttl=64 time=80.5 ms
+    64 bytes from 10.0.0.3: icmp_seq=8 ttl=64 time=81.2 ms
+    64 bytes from 10.0.0.3: icmp_seq=9 ttl=64 time=80.9 ms
+    64 bytes from 10.0.0.3: icmp_seq=10 ttl=64 time=80.7 ms
+    64 bytes from 10.0.0.3: icmp_seq=11 ttl=64 time=80.5 ms
+    64 bytes from 10.0.0.3: icmp_seq=12 ttl=64 time=83.2 ms
+    64 bytes from 10.0.0.3: icmp_seq=13 ttl=64 time=80.9 ms
+    64 bytes from 10.0.0.3: icmp_seq=14 ttl=64 time=80.6 ms
+    64 bytes from 10.0.0.3: icmp_seq=15 ttl=64 time=80.7 ms
+    64 bytes from 10.0.0.3: icmp_seq=16 ttl=64 time=80.7 ms
+    64 bytes from 10.0.0.3: icmp_seq=17 ttl=64 time=80.4 ms
+    64 bytes from 10.0.0.3: icmp_seq=18 ttl=64 time=80.5 ms
+    64 bytes from 10.0.0.3: icmp_seq=19 ttl=64 time=80.5 ms
+    64 bytes from 10.0.0.3: icmp_seq=20 ttl=64 time=81.8 ms
+
+    --- 10.0.0.3 ping statistics ---
+    20 packets transmitted, 20 received, 0% packet loss, time 19030ms
+    rtt min/avg/max/mdev = 80.356/81.018/83.896/0.979 ms
+    
+    Since the RTT also includes the RTT for packets to be transmitted from switch to host,
+    (81.018 - 0.030) / 2 = 40.494ms is the estimated latency, half of the average round trip time between s1 and s2.
+
+    To estimate the throughput of L1, I will run `iperf h1 h3` because they are connected to both ends of L1
+    
+    *** Iperf: testing TCP bandwidth between h1 and h3 
+    *** Results: ['17.7 Mbits/sec', '19.7 Mbits/sec']
+    
+    Since the throughput between switch and host is 18.7 Gbits/sec
+    and it is too fast to limit the throughput of the link,
+    19.7 Mbits/sec is the estimated throughput of L1.
+
+2. L2
+    estimated latency(RTT): 10.32ms
+    estimated throughput: 40.4 Mbits/sec
+
+    To estimate the latency of L2, I ping h3 and h4 for a few seconds to let them establish arp table,
+    and then run `ping` with 20 packets.
+    By `h3 ping -c20 h4`, I get the following output:
+    
+    PING 10.0.0.4 (10.0.0.4) 56(84) bytes of data.
+    64 bytes from 10.0.0.4: icmp_seq=1 ttl=64 time=21.8 ms
+    64 bytes from 10.0.0.4: icmp_seq=2 ttl=64 time=20.6 ms
+    64 bytes from 10.0.0.4: icmp_seq=3 ttl=64 time=20.7 ms
+    64 bytes from 10.0.0.4: icmp_seq=4 ttl=64 time=20.5 ms
+    64 bytes from 10.0.0.4: icmp_seq=5 ttl=64 time=20.4 ms
+    64 bytes from 10.0.0.4: icmp_seq=6 ttl=64 time=20.3 ms
+    64 bytes from 10.0.0.4: icmp_seq=7 ttl=64 time=20.2 ms
+    64 bytes from 10.0.0.4: icmp_seq=8 ttl=64 time=20.7 ms
+    64 bytes from 10.0.0.4: icmp_seq=9 ttl=64 time=20.5 ms
+    64 bytes from 10.0.0.4: icmp_seq=10 ttl=64 time=20.6 ms
+    64 bytes from 10.0.0.4: icmp_seq=11 ttl=64 time=21.0 ms
+    64 bytes from 10.0.0.4: icmp_seq=12 ttl=64 time=20.2 ms
+    64 bytes from 10.0.0.4: icmp_seq=13 ttl=64 time=21.7 ms
+    64 bytes from 10.0.0.4: icmp_seq=14 ttl=64 time=20.5 ms
+    64 bytes from 10.0.0.4: icmp_seq=15 ttl=64 time=20.4 ms
+    64 bytes from 10.0.0.4: icmp_seq=16 ttl=64 time=20.3 ms
+    64 bytes from 10.0.0.4: icmp_seq=17 ttl=64 time=20.4 ms
+    64 bytes from 10.0.0.4: icmp_seq=18 ttl=64 time=20.3 ms
+    64 bytes from 10.0.0.4: icmp_seq=19 ttl=64 time=20.5 ms
+    64 bytes from 10.0.0.4: icmp_seq=20 ttl=64 time=20.8 ms
+
+    --- 10.0.0.4 ping statistics ---
+    20 packets transmitted, 20 received, 0% packet loss, time 19034ms
+    rtt min/avg/max/mdev = 20.223/20.670/21.832/0.438 ms
+    
+    Since the RTT also includes the RTT for packets to be transmitted from switch to host,
+    (20.670 - 0.030) / 2 = 10.32ms is the estimated latency, half of the average round trip time between s2 and s3.
+
+    To estimate the throughput of L2, I will run `iperf h3 h4` because they are connected to both ends of L2
+    
+    *** Iperf: testing TCP bandwidth between h3 and h4 
+    *** Results: ['36.4 Mbits/sec', '40.4 Mbits/sec']
+    
+    Since the throughput between switch and host is 18.7 Gbits/sec
+    and it is too fast to limit the throughput of the link,
+    40.4 Mbits/sec is the estimated throughput.
+
+3. L3
+    estimated latency(RTT): 20.507ms
+    estimated throughput: 30.4 Mbits/sec
+
+    To estimate the latency of L3, I ping h4 and h5 for a few seconds to let them establish arp table,
+    and then `ping` with 20 packets.
+    By `h4 ping -c20 h5`, I get the following output:
+    
+    PING 10.0.0.5 (10.0.0.5) 56(84) bytes of data.
+    64 bytes from 10.0.0.5: icmp_seq=1 ttl=64 time=41.7 ms
+    64 bytes from 10.0.0.5: icmp_seq=2 ttl=64 time=40.8 ms
+    64 bytes from 10.0.0.5: icmp_seq=3 ttl=64 time=40.5 ms
+    64 bytes from 10.0.0.5: icmp_seq=4 ttl=64 time=41.0 ms
+    64 bytes from 10.0.0.5: icmp_seq=5 ttl=64 time=40.4 ms
+    64 bytes from 10.0.0.5: icmp_seq=6 ttl=64 time=40.3 ms
+    64 bytes from 10.0.0.5: icmp_seq=7 ttl=64 time=40.4 ms
+    64 bytes from 10.0.0.5: icmp_seq=8 ttl=64 time=40.6 ms
+    64 bytes from 10.0.0.5: icmp_seq=9 ttl=64 time=40.5 ms
+    64 bytes from 10.0.0.5: icmp_seq=10 ttl=64 time=40.7 ms
+    64 bytes from 10.0.0.5: icmp_seq=11 ttl=64 time=40.9 ms
+    64 bytes from 10.0.0.5: icmp_seq=12 ttl=64 time=40.5 ms
+    64 bytes from 10.0.0.5: icmp_seq=13 ttl=64 time=41.0 ms
+    64 bytes from 10.0.0.5: icmp_seq=14 ttl=64 time=40.2 ms
+    64 bytes from 10.0.0.5: icmp_seq=15 ttl=64 time=40.3 ms
+    64 bytes from 10.0.0.5: icmp_seq=16 ttl=64 time=41.5 ms
+    64 bytes from 10.0.0.5: icmp_seq=17 ttl=64 time=40.4 ms
+    64 bytes from 10.0.0.5: icmp_seq=18 ttl=64 time=40.5 ms
+    64 bytes from 10.0.0.5: icmp_seq=19 ttl=64 time=41.1 ms
+    64 bytes from 10.0.0.5: icmp_seq=20 ttl=64 time=46.5 ms
+
+    --- 10.0.0.5 ping statistics ---
+    20 packets transmitted, 20 received, 0% packet loss, time 19029ms
+    rtt min/avg/max/mdev = 40.269/41.043/46.571/1.327 ms
+
+    Since the RTT also includes the RTT for packets to be transmitted from switch to host,
+    (41.043 - 0.030) / 2 = 20.507 is the estimated latency, half of the average round trip time between s3 and s4.
+
+    To estimate the throughput of L3, I will run `iperf h4 h5` because they are connected to both ends of L3
+    
+    *** Iperf: testing TCP bandwidth between h4 and h5 
+    *** Results: ['27.3 Mbits/sec', '30.4 Mbits/sec']
+    
+    Since the throughput between switch and host is 18.7 Gbits/sec
+    and it is too fast to limit the throughput of the link,
+    30.4 Mbits/sec is the estimated throughput.
+
+4. L4
+    estimated latency(RTT): 30.486ms
+    estimated throughput: 20.2 Mbits/sec
+
+    To estimate the latency of L4, I ping h4 and h7 for a few seconds to let them establish arp table,
+    and then `ping` with 20 packets.
+    I choose to run the ping test between h4 and h7 because they are connected to both ends of L4.
+    By `h4 ping -c20 h7`, I get the following output:
+    
+    PING 10.0.0.7 (10.0.0.7) 56(84) bytes of data.
+    64 bytes from 10.0.0.7: icmp_seq=1 ttl=64 time=61.4 ms
+    64 bytes from 10.0.0.7: icmp_seq=2 ttl=64 time=60.3 ms
+    64 bytes from 10.0.0.7: icmp_seq=3 ttl=64 time=60.5 ms
+    64 bytes from 10.0.0.7: icmp_seq=4 ttl=64 time=60.7 ms
+    64 bytes from 10.0.0.7: icmp_seq=5 ttl=64 time=60.8 ms
+    64 bytes from 10.0.0.7: icmp_seq=6 ttl=64 time=60.3 ms
+    64 bytes from 10.0.0.7: icmp_seq=7 ttl=64 time=65.6 ms
+    64 bytes from 10.0.0.7: icmp_seq=8 ttl=64 time=60.7 ms
+    64 bytes from 10.0.0.7: icmp_seq=9 ttl=64 time=60.9 ms
+    64 bytes from 10.0.0.7: icmp_seq=10 ttl=64 time=60.9 ms
+    64 bytes from 10.0.0.7: icmp_seq=11 ttl=64 time=60.5 ms
+    64 bytes from 10.0.0.7: icmp_seq=12 ttl=64 time=60.9 ms
+    64 bytes from 10.0.0.7: icmp_seq=13 ttl=64 time=60.6 ms
+    64 bytes from 10.0.0.7: icmp_seq=14 ttl=64 time=60.9 ms
+    64 bytes from 10.0.0.7: icmp_seq=15 ttl=64 time=60.4 ms
+    64 bytes from 10.0.0.7: icmp_seq=16 ttl=64 time=60.9 ms
+    64 bytes from 10.0.0.7: icmp_seq=17 ttl=64 time=60.9 ms
+    64 bytes from 10.0.0.7: icmp_seq=18 ttl=64 time=60.8 ms
+    64 bytes from 10.0.0.7: icmp_seq=19 ttl=64 time=60.6 ms
+    64 bytes from 10.0.0.7: icmp_seq=20 ttl=64 time=60.5 ms
+
+    --- 10.0.0.7 ping statistics ---
+    20 packets transmitted, 20 received, 0% packet loss, time 19023ms
+    rtt min/avg/max/mdev = 60.320/61.001/65.647/1.148 ms
+    
+    Since the RTT also includes the RTT for packets to be transmitted from switch to host,
+    (61.001 - 0.030) / 2 = 30.486 is the estimated latency, half of the average round trip time between s4 and s5.
+
+    To estimate the throughput of L4, I will run `iperf h4 h7` because they are connected to both ends of L4
+    
+    *** Iperf: testing TCP bandwidth between h4 and h7 
+    *** Results: ['18.0 Mbits/sec', '20.2 Mbits/sec']
+    
+    Since the throughput between switch and host is 18.7 Gbits/sec
+    and it is too fast to limit the throughput of the link,
+    20.2 Mbits/sec is the estimated throughput.
+    
